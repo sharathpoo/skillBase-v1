@@ -1,5 +1,5 @@
 "use client"
-import React, { useState ,useEffect} from "react";
+import { useEffect } from "react";
 import {useRouter} from "next/navigation";
 import toast from "react-hot-toast";
 const Logout=()=>{
@@ -7,17 +7,18 @@ const Logout=()=>{
     useEffect(()=>{
         const lout=async()=>{
         try{
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BHOST}/logout`,{
+            await fetch(`${process.env.NEXT_PUBLIC_BHOST}/logout`,{
             credentials: 'include'
         })
         toast.success("Logged out SuccessFully")
-        router.push('/')
+        router.push('/login')
         }
-        catch(error){
+        catch{
             toast.error("Logout Failed")
         }    
     }
         lout();
-    },[])
+    },[router])
+    return null
 }
 export default Logout;

@@ -31,10 +31,11 @@ const AddFreelancerPage = () => {
             });
             const rd = await res.json();
             
-            if (rd.success) {
+            if (rd.success && rd.user?.role === "freelancer") {
               setLoad(false);
             } else {
-              router.push('/login');
+              toast.error("Only freelancer accounts can manage freelancer profiles");
+              router.push('/user');
             }
           } catch (error) {
             console.error('Registration check failed:', error);
@@ -42,7 +43,7 @@ const AddFreelancerPage = () => {
           }
         };
         checkReg();
-  },[])
+  },[router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,19 +65,15 @@ const AddFreelancerPage = () => {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Freelancer added successfully!");
-        router.push("/");
-      }
-      else if (data.code) {
-        toast.success("Skills updated successfully");
-        router.push("/");
+        toast.success(data.code ? "Freelancer profile updated successfully!" : "Freelancer profile created successfully!");
+        router.push("/freelancer");
       }
       else {
         toast.error(data.message || "Failed to add freelancer");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.message || "An error occurred");
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +93,7 @@ if(load)return <></>
               Add Freelancer
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Enter the freelancer's details below
+              Enter the freelancer profile details below
             </p>
           </div>
 
@@ -113,7 +110,7 @@ if(load)return <></>
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-blue-400"
                   placeholder="John Doe"
                 />
               </div>
@@ -128,7 +125,7 @@ if(load)return <></>
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-blue-400"
                   placeholder="john@example.com"
                 />
               </div>
@@ -143,7 +140,7 @@ if(load)return <></>
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-blue-400"
                   placeholder="+91 69787 23234"
                 />
               </div>
@@ -160,14 +157,14 @@ if(load)return <></>
                   required
                   min="18"
                   max="100"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-blue-400"
                   placeholder="25"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Expertise (separate with spaces)
+                  Expertise (separate with commas)
                 </label>
                 <input
                   type="text"
@@ -175,11 +172,11 @@ if(load)return <></>
                   value={formData.expertise}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-blue-400"
                   placeholder="TV Repair,AC Repair,Electrician"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Add multiple skills separated by spaces (e.g., "Gas repair,AC Repair etc")
+                  Add multiple skills separated by commas (e.g., &quot;Gas repair, AC repair, TV repair&quot;)
                 </p>
               </div>
 

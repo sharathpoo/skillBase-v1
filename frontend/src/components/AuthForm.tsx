@@ -1,10 +1,17 @@
-import AuthForm from "@/components/AuthForm";
+"use client";
 
-export default function LoginPage() {
-  return <AuthForm />;
-}
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-/*
+export default function AuthForm() {
+  const router = useRouter();
+  const [isSignup, setIsSignup] = useState(false);
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    role: "user",
+  });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -15,7 +22,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const endpoint = isSignup ? `register` : "login";
+      const endpoint = isSignup ? "register" : "login";
       const response = await fetch(`${process.env.NEXT_PUBLIC_BHOST}/${endpoint}`, {
         method: "POST",
         headers: {
@@ -30,7 +37,7 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-      if(data.success) {
+      if (data.success) {
         toast.success(data.message);
         router.push(data.user?.role === "freelancer" ? "/freelancer" : "/user");
       } else {
@@ -42,17 +49,21 @@ export default function LoginPage() {
     }
   };
 
+  const forcedInputStyle = {
+    color: "#111827",
+    WebkitTextFillColor: "#111827",
+    caretColor: "#111827",
+  } as const;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 sm:px-6">
       <div className="relative w-full max-w-md">
-        Decorative elements
-        <div className="absolute -top-6 -left-6 w-24 h-24 bg-blue-500 rounded-full opacity-10 animate-pulse"></div>
-        <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-500 rounded-full opacity-10 animate-pulse delay-150"></div>
-        
+        <div className="absolute -top-4 -left-2 h-20 w-20 rounded-full bg-blue-500 opacity-10 animate-pulse sm:-top-6 sm:-left-6 sm:h-24 sm:w-24"></div>
+        <div className="absolute -bottom-4 -right-2 h-24 w-24 rounded-full bg-purple-500 opacity-10 animate-pulse delay-150 sm:-bottom-6 sm:-right-6 sm:h-32 sm:w-32"></div>
+
         <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
-          Header
-          <div className="px-8 pt-8 pb-6 text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <div className="px-5 pt-6 pb-5 text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 sm:px-8 sm:pt-8 sm:pb-6">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent sm:text-4xl">
               {isSignup ? "Create Account" : "Welcome Back"}
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
@@ -60,8 +71,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          Form
-          <div className="p-8">
+          <div className="p-5 sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               {isSignup && (
                 <div className="space-y-2">
@@ -72,7 +82,8 @@ export default function LoginPage() {
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                    style={forcedInputStyle}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="user">User</option>
                     <option value="freelancer">Freelancer</option>
@@ -90,7 +101,8 @@ export default function LoginPage() {
                   value={formData.username}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
+                  style={forcedInputStyle}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="johndoe"
                 />
               </div>
@@ -105,8 +117,9 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent outline-none transition-colors dark:text-white"
-                  placeholder="••••••••"
+                  style={forcedInputStyle}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  placeholder="********"
                 />
               </div>
 
@@ -118,7 +131,6 @@ export default function LoginPage() {
               </button>
             </form>
 
-            Toggle between login and signup
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {isSignup ? "Already have an account? " : "Don't have an account? "}
@@ -135,7 +147,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-};
-
-export default LoginPage;
-*/
+}
