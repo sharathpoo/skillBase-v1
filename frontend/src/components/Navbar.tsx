@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+const BACKEND_HOST = process.env.NEXT_PUBLIC_BHOST || "http://localhost:8080";
+
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -14,7 +16,7 @@ const Navbar = () => {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BHOST}/check_reg`, {
+        const response = await fetch(`${BACKEND_HOST}/check_reg`, {
           credentials: "include",
         });
         const data = await response.json();
