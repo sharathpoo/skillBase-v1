@@ -14,6 +14,9 @@ interface Freelancer {
   phone: string;
   expertise: string[];
   age: number;
+  averageRating: number;
+  ratingCount: number;
+  isAvailable?: boolean;
 }
 
 interface SessionUser {
@@ -144,14 +147,22 @@ export default function UserDashboard() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/findFL?skill=${encodeURIComponent(searchQuery)}`
+        `${process.env.NEXT_PUBLIC_BHOST}/findFL?skill=${encodeURIComponent(searchQuery)}`,
+        {
+          credentials: "include",
+        }
       );
       const data = await response.json();
       if (!data.success) {
         setFreelancers([]);
         return;
       }
-      setFreelancers(data.data);
+      setFreelancers(
+        (data.data ?? []).map((freelancer: Freelancer) => ({
+          ...freelancer,
+          isAvailable: freelancer.isAvailable ?? true,
+        }))
+      );
     } catch (err) {
       setError("Error fetching freelancers. Please try again.");
       console.error("Search error:", err);
@@ -233,12 +244,39 @@ export default function UserDashboard() {
 
         <div className="space-y-4">
           {freelancers.map((freelancer, index) => (
+            (() => {
+              const isAvailable = freelancer.isAvailable ?? true;
+
+              return (
             <Card key={index} className="border-slate-800 bg-slate-900/90 shadow-xl shadow-black/20">
               <CardHeader>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="text-xl font-semibold text-slate-100">{freelancer.name}</h2>
                     <p className="text-slate-400">Age: {freelancer.age}</p>
+                    <div className="mt-3 space-y-3 text-sm text-slate-300">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="inline-flex items-center rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 font-medium text-amber-300">
+                          Rating: {freelancer.averageRating.toFixed(1)} / 5
+                        </span>
+                        <span className="text-slate-400">
+                        {freelancer.ratingCount > 0
+                          ? `Based on ${freelancer.ratingCount} completed booking${freelancer.ratingCount > 1 ? "s" : ""}`
+                          : "Default rating for new freelancer"}
+                        </span>
+                      </div>
+                      <div>
+                        <span
+                          className={`inline-flex items-center rounded-full border px-3 py-1 font-medium ${
+                            isAvailable
+                              ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-300"
+                              : "border-rose-400/40 bg-rose-500/10 text-rose-300"
+                          }`}
+                        >
+                          {isAvailable ? "Available" : "Not Available"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <div className="text-left text-slate-300 sm:text-right">
                     <p className="text-sm">{freelancer.email}</p>
@@ -257,13 +295,16 @@ export default function UserDashboard() {
                   </div>
                   <Button
                     onClick={() => handleBook(freelancer)}
+                    disabled={!isAvailable}
                     className="w-full shrink-0 sm:w-auto"
                   >
-                    Book
+                    {isAvailable ? "Book" : "Unavailable"}
                   </Button>
                 </div>
               </CardContent>
             </Card>
+              );
+            })()
           ))}
 
           {freelancers.length === 0 && !isLoading && !error && (

@@ -36,6 +36,14 @@ export default function FreelancerDashboard() {
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
 
+  const completedRatedBookings = bookings.filter(
+    (booking) => booking.status === "completed" && typeof booking.rating === "number"
+  );
+  const averageRating =
+    completedRatedBookings.length > 0
+      ? completedRatedBookings.reduce((sum, booking) => sum + (booking.rating ?? 0), 0) /
+        completedRatedBookings.length
+      : 4;
   const loadBookings = async () => {
     const bookingsResponse = await fetch(`${process.env.NEXT_PUBLIC_BHOST}/freelancer/bookings`, {
       credentials: "include",
@@ -181,6 +189,19 @@ export default function FreelancerDashboard() {
                 </div>
               </div>
 
+              <div>
+                <p className="text-sm text-slate-500 mb-2">Rating</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-300">
+                    {averageRating.toFixed(1)} / 5
+                  </span>
+                  <span className="text-sm text-slate-400">
+                    {completedRatedBookings.length > 0
+                      ? `Based on ${completedRatedBookings.length} completed rating${completedRatedBookings.length > 1 ? "s" : ""}`
+                      : "Default rating until bookings are completed"}
+                  </span>
+                </div>
+              </div>
               <Button onClick={() => router.push("/newentry")}>
                 Edit Freelancer Details
               </Button>

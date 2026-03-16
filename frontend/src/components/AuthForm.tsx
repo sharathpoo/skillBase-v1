@@ -102,8 +102,8 @@ export default function AuthForm() {
                   onChange={handleChange}
                   required
                   style={forcedInputStyle}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                  placeholder="johndoe"
+                  className="auth-input w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  placeholder="M S Dhoni"
                 />
               </div>
 
@@ -118,7 +118,7 @@ export default function AuthForm() {
                   onChange={handleChange}
                   required
                   style={forcedInputStyle}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="auth-input w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black caret-black outline-none transition-colors focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="********"
                 />
               </div>

@@ -80,6 +80,11 @@
     font-weight: 400 !important;
     opacity: 1;
   }
+  .auth-input::placeholder {
+    color: #cfd8e6 !important;
+    -webkit-text-fill-color: #cfd8e6 !important;
+    font-weight: 400 !important;
+  }
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,

@@ -153,10 +153,24 @@ app.post('/newFL',isLoggedIn,requireFreelancer,async(req,res)=>{
 catch(error){
     console.log(error)
     return res.status(500).json({success:false,message:"Error Occured",error:error.toString()})
-}
-}
+    }
+})
 
-)
+const attachOptionalUser = (req,res,next)=>{
+    const token = req.cookies?.token
+    if(!token){
+        return next()
+    }
+
+    try{
+        req.user = jwt.verify(token,JWT_SECRET)
+    }
+    catch(error){
+        req.user = null
+    }
+
+    next()
+}
 
 app.get('/freelancer/me',isLoggedIn,requireFreelancer,async(req,res)=>{
     try{
@@ -254,6 +268,18 @@ app.post('/bookings',isLoggedIn,requireUser,async(req,res)=>{
             return res.status(400).json({success:false,message:"Missing booking details"})
         }
 
+        const hasActiveWork = await Booking.exists({
+            freelancerUserId,
+            status: 'accepted',
+        })
+
+        if(hasActiveWork){
+            return res.status(400).json({
+                success:false,
+                message:"This freelancer is currently unavailable. Please choose another freelancer.",
+            })
+        }
+
         const booking = new Booking({
             customerUserId: req.user.id,
             customerUsername: req.user.username,
@@ -274,17 +300,146 @@ app.post('/bookings',isLoggedIn,requireUser,async(req,res)=>{
     }
 })
 
-app.get('/findFL',async(req,res)=>{
-    const skill=(req.query.skill || '').trim()
-    if(!skill) return res.status(200).json({success: false,message: "Please include a skill"})
-    const t=skill.toLowerCase()
-    const users= await Freelancer.find()
-    const flist=[]
-    for(const user of users){
-        if(user.expertise.includes(t)) flist.push(user)
+app.get('/findFL',attachOptionalUser,async(req,res)=>{
+    try{
+        const skill=(req.query.skill || '').trim()
+        if(!skill) return res.status(200).json({success: false,message: "Please include a skill"})
+
+        const normalizedSkill = skill.toLowerCase()
+        const unavailableFreelancerIds = await Booking.distinct('freelancerUserId', {
+            status: 'accepted',
+        })
+        const unavailableFreelancerIdSet = new Set(
+            unavailableFreelancerIds.map((id) => id.toString())
+        )
+
+        const freelancers = await Freelancer.find({
+            expertise: normalizedSkill,
+        }).lean()
+
+        if(freelancers.length===0){
+            return res.status(200).json({success: false,message: "No Worker Found"})
+        }
+
+        const freelancerUserIds = freelancers.map((freelancer) => freelancer.userId)
+        const ratingStats = await Booking.aggregate([
+            {
+                $match: {
+                    freelancerUserId: { $in: freelancerUserIds },
+                    status: 'completed',
+                    rating: { $ne: null },
+                },
+            },
+            {
+                $group: {
+                    _id: '$freelancerUserId',
+                    averageRating: { $avg: '$rating' },
+                    ratingCount: { $sum: 1 },
+                },
+            },
+        ])
+
+        const ratingByFreelancer = new Map(
+            ratingStats.map((item) => [
+                item._id.toString(),
+                {
+                    averageRating: Number(item.averageRating.toFixed(1)),
+                    ratingCount: item.ratingCount,
+                },
+            ])
+        )
+
+        const data = freelancers.map((freelancer) => {
+            const rating = ratingByFreelancer.get(freelancer.userId.toString())
+
+            return {
+                ...freelancer,
+                averageRating: rating?.averageRating ?? 4,
+                ratingCount: rating?.ratingCount ?? 0,
+                isAvailable: !unavailableFreelancerIdSet.has(freelancer.userId.toString()),
+            }
+        })
+
+        let historyByFreelancer = new Map()
+        if(req.user?.id && req.user?.role === 'user'){
+            const userHistory = await Booking.aggregate([
+                {
+                    $match: {
+                        customerUserId: new mongoose.Types.ObjectId(req.user.id),
+                        freelancerUserId: { $in: freelancerUserIds },
+                    },
+                },
+                {
+                    $group: {
+                        _id: '$freelancerUserId',
+                        bookingCount: { $sum: 1 },
+                        completedCount: {
+                            $sum: {
+                                $cond: [{ $eq: ['$status', 'completed'] }, 1, 0],
+                            },
+                        },
+                        latestBookingAt: { $max: '$createdAt' },
+                    },
+                },
+            ])
+
+            historyByFreelancer = new Map(
+                userHistory.map((item) => [
+                    item._id.toString(),
+                    {
+                        bookingCount: item.bookingCount,
+                        completedCount: item.completedCount,
+                        latestBookingAt: item.latestBookingAt,
+                    },
+                ])
+            )
+        }
+
+        const rankedData = data
+            .map((freelancer) => {
+                const history = historyByFreelancer.get(freelancer.userId.toString())
+
+                return {
+                    ...freelancer,
+                    previousBookings: history?.bookingCount ?? 0,
+                    previousCompletedBookings: history?.completedCount ?? 0,
+                    lastBookedAt: history?.latestBookingAt ?? null,
+                }
+            })
+            .sort((a,b) => {
+                if(b.previousCompletedBookings !== a.previousCompletedBookings){
+                    return b.previousCompletedBookings - a.previousCompletedBookings
+                }
+
+                if(b.previousBookings !== a.previousBookings){
+                    return b.previousBookings - a.previousBookings
+                }
+
+                if(a.lastBookedAt && b.lastBookedAt){
+                    return new Date(b.lastBookedAt).getTime() - new Date(a.lastBookedAt).getTime()
+                }
+
+                if(a.lastBookedAt){
+                    return -1
+                }
+
+                if(b.lastBookedAt){
+                    return 1
+                }
+
+                if(b.averageRating !== a.averageRating){
+                    return b.averageRating - a.averageRating
+                }
+
+                return a.name.localeCompare(b.name)
+            })
+
+        return res.status(200).json({success:true,data: rankedData})
     }
-    if(flist.length==0) return res.status(200).json({success: false,message: "No Worker Found"})
-    return res.status(200).json({success:true,data: flist})
+    catch(error){
+        console.log(error)
+        return res.status(500).json({success:false,message:"Unable to search freelancers"})
+    }
 })
 
 app.listen(port,()=>{
