@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import BookingSuccess from "./BookingSuccess";
 
 type BookingDetails = {
@@ -15,9 +14,13 @@ type BookingDetails = {
   date: string;
   time: string;
 };
-
 export default function Page() {
-  const searchParams = useSearchParams();
+  const [searchParams,setSearchParams]=useState<URLSearchParams>(new URLSearchParams())
+ useEffect(()=>{
+ const sp =new URLSearchParams(window.location.search)
+ setSearchParams(sp)
+ },[])
+
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
 
   useEffect(() => {
