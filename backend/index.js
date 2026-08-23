@@ -15,7 +15,7 @@ const Booking = require('./models/booking')
 const jwt=require('jsonwebtoken');
 const mongoose=require('mongoose')
 const bcrypt=require('bcryptjs');
-app.use(cors({origin: ["http://localhost:3000","http://localhost:3001"],credentials: true}))
+app.use(cors({origin: ["http://localhost:3000","http://localhost:3001","https://fixit-pearl.vercel.app"],credentials: true}))
 mongoose.connect(process.env.mongoUri,{family:4})
   .then(() => console.log('Connected to MongoDB cluster'))
   .catch(err => console.error('Could not connect to MongoDB cluster', err));
@@ -72,7 +72,8 @@ app.post('/register',async(req,res)=>{
     const token = buildToken(exuser)
     res.cookie('token', token, {
             httpOnly: true,
-            expires: false,
+            secure: true,
+            sameSite: 'None',
             maxAge: 48*60*60*1000
           });
     return res.status(200).json({
@@ -98,7 +99,8 @@ app.post('/login',async(req,res)=>{
         const token = buildToken(user)
     res.cookie('token', token, {
             httpOnly: true,
-            expires: false,
+            secure: true,
+            sameSite: 'None',
             maxAge: 48*60*60*1000
           });
     return res.status(200).json({
